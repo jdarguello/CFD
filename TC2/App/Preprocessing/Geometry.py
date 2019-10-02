@@ -7,8 +7,8 @@ class Geo():
 	"""
 	def __init__ (self, dic, local=False):
 		#Datos
-		a = dic['a']['Valor']
-		h = dic['h']['Valor']
+		a = dic['W']['Valor']
+		h = dic['H']['Valor']
 		#FIGURA
 		fig = plt.figure()
 		self.ax = fig.add_subplot(111)
