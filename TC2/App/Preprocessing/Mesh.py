@@ -15,6 +15,7 @@ class Element():
 		Desarrolla el dibujo del elemento
 	"""
 	def esquemaN(self, Es, nodos, color = 'black'):
+		self.nodos = nodos
 		Es.scatter(nodos[:, [0]], nodos[:, [1]], c=color)
 	def esquemaEL(self, Es, nodos, color = 'black'):
 		for i in range(1,len(nodos)):
@@ -22,9 +23,10 @@ class Element():
 				[nodos[i-1][0], nodos[i][0]],
 				[nodos[i-1][1], nodos[i][1]],
 				color=color
-			)
-
-
+			)  
+	def Guardar(self, nodos):
+		pass
+            
 class Cuad4(Element):
 	"""
 		Elemento cuadrangular 2D de 4 nodos.
