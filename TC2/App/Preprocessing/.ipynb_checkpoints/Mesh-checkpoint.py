@@ -25,7 +25,9 @@ class Element():
 				color=color
 			)  
 	def Guardar(self, nodos):
-		pass
+		text = """
+				INSERT INTO nodes
+
             
 class Cuad4(Element):
 	"""
