@@ -23,7 +23,6 @@ class Element():
 				[nodos[i-1][0], nodos[i][0]],
 				[nodos[i-1][1], nodos[i][1]],
 				color=color
-<<<<<<< HEAD
 			)
 	def save(self, nodos, *args):
 		#Guardar en base de datos
@@ -54,12 +53,10 @@ class Element():
 		text = text[:-2] + ') VALUES (' + text2
 		cursor.execute(text)
 		con.commit()
-=======
-			)  
 	def Guardar(self, nodos):
 		text = """
 				INSERT INTO nodes
->>>>>>> 9e2b2d95fe216add6e46ba223ea5ab2d90bd933f
+				"""
 
             
 class Cuad4(Element):
