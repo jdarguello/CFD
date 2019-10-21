@@ -23,14 +23,10 @@ class DB():
 		self.Tabla_Nodos()
 		self.Tabla_Elementos(ElType)
 
-	def data(self, tab_name):
-		return self.con.execute("SELECT * FROM " + tab_name).fetchall()
-
 	def Tabla_Nodos(self):
 		self.cursor.execute("""
 			CREATE TABLE nodes (
-				NodeID INTEGER PRIMARY KEY,
-				ID INTEGER,
+				NodeID int,
 				x float,
 				y float
 			)
@@ -38,7 +34,7 @@ class DB():
 		self.con.commit()
 
 	def Tabla_Elementos(self, ElType):
-		text = "CREATE TABLE elements (ElID INTEGER PRIMARY KEY, "
+		text = "CREATE TABLE elements (ElID int, "
 		digit = 0
 		for i in range(len(ElType), -1, -1):
 			try:
