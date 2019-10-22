@@ -4,7 +4,7 @@ class DB():
 	"""
 		Crea y organiza la base de datos.
 	"""
-	def __init__(self, local, ElType):
+	def __init__(self, local, ElType = "Cuad4"):
 		#Borrar tablas existentes
 		try:
 			try:
@@ -38,21 +38,14 @@ class DB():
 		self.con.commit()
 
 	def Tabla_Elementos(self, ElType):
-		text = "CREATE TABLE elements (ElID INTEGER PRIMARY KEY, "
-		digit = 0
-		for i in range(len(ElType), -1, -1):
-			try:
-				int(ElType[i])
-				digit += 1
-			except:
-				pass
-		for i in range(int(ElType[-digit:])):
-			if i < int(ElType[-digit:])-1:
-				char = ','
-			else:
-				char = ''
-			text += 'Node' + str(i+1) + char
-		text += ')'
+		text = """CREATE TABLE elements (
+				ElID INTEGER PRIMARY KEY,
+				N INTEGER,
+				S INTEGER,
+				p INTEGER,
+				E INTEGER,
+				W INTEGER
+			)"""
 
 		self.cursor.execute(text)
 		self.con.commit()

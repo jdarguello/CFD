@@ -17,14 +17,14 @@ class Element():
 	def esquemaN(self, Es, nodos, color = 'black'):
 		self.nodos = nodos
 		Es.scatter(nodos[:, [0]], nodos[:, [1]], c=color)
-	def esquemaEL(self, Es, nodos, color = 'black'):
-		for i in range(1,len(nodos)):
+	def esquemaEL(self, Es, puntos, color = 'black'):
+		for i in range(1,len(puntos)):
 			Es.plot(
-				[nodos[i-1][0], nodos[i][0]],
-				[nodos[i-1][1], nodos[i][1]],
+				[puntos[i-1][0], puntos[i][0]],
+				[puntos[i-1][1], puntos[i][1]],
 				color=color
 			)
-	def save(self, nodos, *args):
+	def save(self, nodos, coord, *args):
 		#Guardar en base de datos
 		con, cursor = args[0]
 		#Nodos
@@ -47,7 +47,7 @@ class Element():
 		text = 'INSERT INTO elements ('
 		text2 = ''
 		for i in range(len(Final_nodes)):
-			text += 'Node' + str(i+1) + ', '
+			text += coord[i] + ', '
 			text2 += str(Final_nodes[i]) + ', '
 		text2 = text2[:-2] + ')'
 		text = text[:-2] + ') VALUES (' + text2
@@ -57,33 +57,70 @@ class Element():
 		text = """
 				INSERT INTO nodes
 				"""
-
-            
-class Cuad4(Element):
+   
+class Mono(Element):
 	"""
-		Elemento cuadrangular 2D de 4 nodos.
-
-		SE DEBE HACER UNA BASE DE DATOS DE PUNTOS:
-
-			Núm nodo 	x	y
-
-		Elementos
-
-			Núm El 		Nodo1	Nodo2	Nodo3	Nodo4
+		Elemento cuadrangular "cíclope".
 
 	"""
-	def __init__(self, tam, Es, init=[0,0], num=4, **kwargs):
-		#Ubicación de nodos
-		nodos = self.nodes(init,tam)
+	def __init__(self, tam, Es, init=[0,0], limit=("S", "W"), **kwargs):
+		#Puntos cartesianos del elemento
+		points = self.puntos(init,tam)
+		#Nodos
+		nodes, coord = self.nodes(init, tam, limit)
 		#Esquema - nodos
-		self.esquemaN(Es, nodos)
+		self.esquemaN(Es, nodes)
 		#Esquema - Elementos
-		self.esquemaEL(Es, nodos)
+		self.esquemaEL(Es, points)
 
 		#Guardar en base de datos
-		self.save(nodos, kwargs['db'])
+		self.save(nodes, coord, kwargs['db'])
 
-	def nodes(self, init, tam):
+	def nodes(self, init, tam, limit):
+		coord = ["p"]
+		if limit[0] and limit[1]:
+			nodes = np.zeros((3,2))
+			if limit[0] == "S":
+				coord.append("S")
+				nodes[1][0] = init[0]+tam[0]/2
+				nodes[1][1] = init[1]
+			elif limit[0] == "N":
+				coord.append("N")
+				nodes[1][0] = init[0]+tam[0]/2
+				nodes[1][1] = init[1] + tam[1]
+			if limit[1] == "W":
+				coord.append("W")
+				nodes[2][0] = init[0]
+				nodes[2][1] = init[1]+tam[1]/2
+			elif limit[1] == "E":
+				coord.append("E")
+				nodes[2][0] = init[0] + tam[0]
+				nodes[2][1] = init[1]+tam[1]/2
+		elif limit[0] or limit[1]:
+			nodes = np.zeros((2,2))
+			if limit[0] == "S":
+				coord.append("S")
+				nodes[1][0] = init[0]+tam[0]/2
+				nodes[1][1] = init[1]
+			elif limit[0] == "N":
+				coord.append("N")
+				nodes[1][0] = init[0]+tam[0]/2
+				nodes[1][1] = init[1] + tam[1]
+			if limit[1] == "W":
+				coord.append("W")
+				nodes[1][0] = init[0]
+				nodes[1][1] = init[1]+tam[1]/2
+			elif limit[1] == "E":
+				coord.append("E")
+				nodes[1][0] = init[0] + tam[0]
+				nodes[1][1] = init[1]+tam[1]/2
+		else:
+			nodes = np.zeros((1,2))
+		nodes[0][0] = init[0]+tam[0]/2
+		nodes[0][1] = init[1]+tam[1]/2
+		return nodes, coord
+
+	def puntos(self, init, tam):
 		points = np.zeros((4,2))
 		for i in range(len(points)):
 			if i == 0:
@@ -100,50 +137,6 @@ class Cuad4(Element):
 					points[i][0] = init[0]
 		return points
 
-class Cuad8(Cuad4):
-	"""
-		Elemento cuadrangular 2D de 8 nodos.
-	"""
-	def __init__(self, tam, Es, init=[0,0], num = 8, **kwargs):
-		#4 nodes
-		nodos = self.nodes(init, tam)
-		#8 nodes
-		nodes = []
-		for i in range(len(nodos)):
-			nodes.append(nodos[i])
-			if not i%2:
-				#Arriba - abajo
-				nodes.append([((nodos[i+1][j]-nodos[i][j])/2 + \
-					nodos[i][j]) for j in range(2)])
-			else:
-				#Izquierda - derecha
-				if nodos[0][1] > nodos[3][1]:
-					maximo = nodos[0][1]
-					minimo = nodos[3][1]
-				else:
-					maximo = nodos[3][1]
-					minimo = nodos[0][1]
-				nodes.append([nodos[i][0], minimo+(maximo-minimo)/2])
-		#Esquemas
-		self.esquemaN(Es, np.array(nodes))
-		self.esquemaEL(Es, np.array(nodes))
-
-		#Guardar en base de datos
-		self.save(nodes, kwargs['db'])
-    
-class Tri3(Element):
-	"""
-		Elemento triangular 2D de 3 nodos.
-	"""
-	def __init__(self, tam, Es, init=[0,0], num = 3, **kwargs):
-		pass
-
-class Tri6(Tri3):
-	"""
-		Elemento triangular 2D de 6 nodos.
-	"""
-	def __init__(self, tam, Es, init=[0,0], num = 6, **kwargs):
-		pass
 
 
 class Malla(DB, Geo):
@@ -159,21 +152,31 @@ class Malla(DB, Geo):
 			- ref	 ->	Refinamiento de curvatura
 			- num 	 ->	Vector booleano para numeración de nodos y elementos
 	"""
-	def __init__(self, El, ref, num = [False, False],dom=False, Eltype = 'Cuad4', \
-		local = False):
+	def __init__(self, El, ref, num = [False, False],dom=False, local = False):
 		#Conexión con base de datos
-		super().__init__(local, Eltype)
+		super().__init__(local)
 		#Dominio General - Frontera
 		if dom:
 			super(DB, self).__init__(dom)
 		#Dibujo de los elementos
 		coord = [0,0]
+		limit = [False,False]
 		for x in range(int(dom['W']['Valor']/El[0])):
+			if x == 0:
+				limit[1] = "W"
+			elif x == int(dom['W']['Valor']/El[0])-1:
+				limit[1] = "E"
+			else:
+				limit[1] = False
 			for y in range(int(dom['H']['Valor']/El[1])):
-				if Eltype == 'Cuad4':
-					Cuad4(El, self.ax, coord, db=[self.con, self.cursor])
-				elif Eltype == 'Cuad8':
-					Cuad8(El, self.ax, coord, db=[self.con, self.cursor])
+				#print(coord)
+				if y == 0:
+					limit[0] = "S"
+				elif y == int(dom['H']['Valor']/El[1])-1:
+					limit[0] = "N"
+				else:
+					limit[0] = False
+				Mono(El, self.ax, coord, limit, db=[self.con, self.cursor])
 				coord[1] += El[1]
 			coord[0] += El[0]
 			coord[1] = 0
@@ -186,9 +189,10 @@ class Malla(DB, Geo):
 			self.textN()
 
 		#Texto Elemental
+		"""
 		if num[1]:
 			self.textE()
-
+		"""
 		#Gráfica
 		plt.show()
 
@@ -203,6 +207,7 @@ class Malla(DB, Geo):
 		for element in elements:
 			dominio = [[0,0], [0,0]]	#Mínimos y máximos en x e y.
 			for i in range(1,len(element)):
+				print(nodos)
 				if i == 1:
 					dominio[0][0] = nodos[element[i]-1][2]
 					dominio[1][0] = nodos[element[i]-1][3]
@@ -216,9 +221,32 @@ class Malla(DB, Geo):
 						str(element[0]))
 
 	def organizar(self):
+		def guardar(key):
+			self.con.execute('UPDATE elements SET ' + key + '=' + \
+				str(nodes[elements[j][3]-1][0]) + ' WHERE ElID=' + str(elements[i][0]))
+		def llenado():
+			nodal_info = (nodes[elements[j][3]-1][2], nodes[elements[j][3]-1][3])
+			for key in vec:
+				if not vec[key]['value']:
+					try:
+						# ¿x?
+						if vec[key]['x'] == '+':
+							if nodal_info[0] > p[0] and p[1] == nodal_info[1]:
+								guardar(key)
+						else:
+							if nodal_info[0] < p[0] and p[1] == nodal_info[1]:
+								guardar(key)
+					except:
+						# y
+						if vec[key]['y'] == '+':
+							if nodal_info[1] > p[1] and p[0] == nodal_info[0]:
+								guardar(key)
+							elif nodal_info[1] < p[1] and p[0] == nodal_info[0]:
+								guardar(key)
 		datos = self.con.execute("SELECT * FROM nodes ORDER BY x ASC, y ASC").fetchall()
 		new_ids = {}
 		elements = self.data('elements')
+		nodes = self.con.execute("SELECT * FROM nodes").fetchall()
 		#Matriz booleana
 		M = []
 		for i in range(len(elements)):
@@ -226,7 +254,54 @@ class Malla(DB, Geo):
 			for j in range(1,len(elements[i])):
 				vec.append(True)
 			M.append(vec)
-		#Organización de la información
+		#Llenar información de elementos
+		for i in range(len(elements)):
+			p = (nodes[elements[i][3]-1][2], nodes[elements[i][3]-1][3])
+			#Planteamiento vector booleano
+			vec = {
+				'N': {
+					'value': False,
+					'y': '+'
+				},
+				'S': {
+					'value': False,
+					'y': '-'
+				}, 
+				'E': {
+					'value': False,
+					'x': '+'
+				},
+				'W': {
+					'value': False,
+					'x': '-'
+				},
+			}
+			for item in range(1, len(elements[i])):
+				if item == 1:
+					o = 'N'
+				elif item == 2:
+					o = 'S'
+				elif item == 4:
+					o = 'E'
+				elif item == 5:
+					o = 'W'
+				if elements[i][item] is not None and item != 3:
+					vec[o]['value'] = True
+			#Forward
+			for j in range(i, len(elements)):
+				if vec['N']['value'] and vec['E']['value']:
+					break
+				else:
+					llenado()
+			#Backward
+			for j in range(i, 0, -1):
+				if vec['S']['value'] and vec['W']['value']:
+					break
+				else:
+					llenado()	
+		#Organización de la información - Renombrar
+		elements = self.data('elements')
+		print(elements)
 		for i in range(len(datos)):
 			new_ids[i+1] = datos[i][0]
 			self.con.execute('UPDATE nodes SET ID=' + \
@@ -269,6 +344,5 @@ if __name__ == '__main__':
 	        }
 	    }
 	}
-	Malla((0.5,0.5), (False, False), [True, True],  data['Geometría'], local=True, \
-		Eltype='Cuad8')
+	Malla((0.5,0.5), (False, False), [True, True],  data['Geometría'], local=True)
 
