@@ -10,14 +10,14 @@ class DB():
 			try:
 				os.remove('data.db')
 			except:
-				os.remove('App/Preprocessing/data.db')
+				os.remove('App/data.db')
 		except:
 			pass
 		#Creación de la base de datos
 		if local:
 			self.con = sql.connect('data.db')
 		else:
-			self.con = sql.connect('App/Preprocessing/data.db')
+			self.con = sql.connect('App/data.db')
 		self.cursor = self.con.cursor()
 		#Crear tablas
 		self.Tabla_Nodos()
@@ -32,7 +32,8 @@ class DB():
 				NodeID INTEGER PRIMARY KEY,
 				ID INTEGER,
 				x float,
-				y float
+				y float,
+				T float
 			)
 			""")
 		self.con.commit()

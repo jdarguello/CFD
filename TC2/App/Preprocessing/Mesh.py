@@ -37,8 +37,13 @@ class Element():
 					exist = True
 					Final_nodes.append(data[0])
 			if not exist:
-				text = 'INSERT INTO nodes (x,y) VALUES ('
-				text += str(nodo[0]) + ',' + str(nodo[1]) + ')'
+				if not np.isnan(nodo[2]):
+					text = 'INSERT INTO nodes (x,y,T) VALUES ('
+					text += str(nodo[0]) + ',' + str(nodo[1]) + ','
+					text += str(nodo[2]) + ')'
+				else:
+					text = 'INSERT INTO nodes (x,y) VALUES ('
+					text += str(nodo[0]) + ',' + str(nodo[1]) + ')'
 				cursor.execute(text)
 				ID = con.execute('SELECT * FROM nodes ORDER BY NodeID DESC LIMIT 1')
 				Node = ID.fetchall()
@@ -67,7 +72,11 @@ class Mono(Element):
 		#Puntos cartesianos del elemento
 		points = self.puntos(init,tam)
 		#Nodos
-		nodes, coord = self.nodes(init, tam, limit)
+		try:
+			Ts = kwargs['Ts']
+		except:
+			Ts = []
+		nodes, coord = self.nodes(init, tam, limit,Ts)
 		#Esquema - nodos
 		self.esquemaN(Es, nodes)
 		#Esquema - Elementos
@@ -76,48 +85,57 @@ class Mono(Element):
 		#Guardar en base de datos
 		self.save(nodes, coord, kwargs['db'])
 
-	def nodes(self, init, tam, limit):
+	def nodes(self, init, tam, limit, Ti):
 		coord = ["p"]
 		if limit[0] and limit[1]:
-			nodes = np.zeros((3,2))
+			nodes = np.zeros((3,3))
 			if limit[0] == "S":
 				coord.append("S")
 				nodes[1][0] = init[0]+tam[0]/2
 				nodes[1][1] = init[1]
+				nodes[1][2] = Ti[1]
 			elif limit[0] == "N":
 				coord.append("N")
 				nodes[1][0] = init[0]+tam[0]/2
 				nodes[1][1] = init[1] + tam[1]
+				nodes[1][2] = Ti[0]
 			if limit[1] == "W":
 				coord.append("W")
 				nodes[2][0] = init[0]
 				nodes[2][1] = init[1]+tam[1]/2
+				nodes[2][2] = Ti[1]
 			elif limit[1] == "E":
 				coord.append("E")
 				nodes[2][0] = init[0] + tam[0]
 				nodes[2][1] = init[1]+tam[1]/2
+				nodes[2][2] = Ti[1]
 		elif limit[0] or limit[1]:
-			nodes = np.zeros((2,2))
+			nodes = np.zeros((2,3))
 			if limit[0] == "S":
 				coord.append("S")
 				nodes[1][0] = init[0]+tam[0]/2
 				nodes[1][1] = init[1]
+				nodes[1][2] = Ti[1]
 			elif limit[0] == "N":
 				coord.append("N")
 				nodes[1][0] = init[0]+tam[0]/2
 				nodes[1][1] = init[1] + tam[1]
+				nodes[1][2] = Ti[0]
 			if limit[1] == "W":
 				coord.append("W")
 				nodes[1][0] = init[0]
 				nodes[1][1] = init[1]+tam[1]/2
+				nodes[1][2] = Ti[1]
 			elif limit[1] == "E":
 				coord.append("E")
 				nodes[1][0] = init[0] + tam[0]
 				nodes[1][1] = init[1]+tam[1]/2
+				nodes[1][2] = Ti[1]
 		else:
-			nodes = np.zeros((1,2))
+			nodes = np.zeros((1,3))
 		nodes[0][0] = init[0]+tam[0]/2
 		nodes[0][1] = init[1]+tam[1]/2
+		nodes[0][2] = np.nan
 		return nodes, coord
 
 	def puntos(self, init, tam):
@@ -152,7 +170,7 @@ class Malla(DB, Geo):
 			- ref	 ->	Refinamiento de curvatura
 			- num 	 ->	Vector booleano para numeración de nodos y elementos
 	"""
-	def __init__(self, El, ref, num = [False, False],dom=False, local = False):
+	def __init__(self, El, Ts, ref, num = [False, False],dom=False, local = False):
 		#Conexión con base de datos
 		super().__init__(local)
 		#Dominio General - Frontera
@@ -176,7 +194,10 @@ class Malla(DB, Geo):
 					limit[0] = "N"
 				else:
 					limit[0] = False
-				Mono(El, self.ax, coord, limit, db=[self.con, self.cursor])
+				if limit[0] or limit[1]:
+					Mono(El, self.ax, coord, limit, db=[self.con, self.cursor], Ts=Ts)
+				else:
+					Mono(El, self.ax, coord, limit, db=[self.con, self.cursor])
 				coord[1] += El[1]
 			coord[0] += El[0]
 			coord[1] = 0
@@ -207,7 +228,6 @@ class Malla(DB, Geo):
 		for element in elements:
 			dominio = [[0,0], [0,0]]	#Mínimos y máximos en x e y.
 			for i in range(1,len(element)):
-				print(nodos)
 				if i == 1:
 					dominio[0][0] = nodos[element[i]-1][2]
 					dominio[1][0] = nodos[element[i]-1][3]
@@ -319,9 +339,7 @@ class Malla(DB, Geo):
 						text += str(j)
 						self.con.execute(text)
 						M[j-1][k-1] = False
-		self.con.commit()
-		print(self.data('elements'))
-			
+		self.con.commit()			
 
 if __name__ == '__main__':
 	data = {
@@ -350,5 +368,4 @@ if __name__ == '__main__':
 	        }
 	    }
 	}
-	Malla((0.5,0.5), (False, False), [True, True],  data['Geometría'], local=True)
-
+	Malla((0.5,0.5), (5,0), (False, False), [True, True],  data['Geometría'], local=True)

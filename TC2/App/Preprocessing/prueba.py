@@ -1,2 +1,6 @@
-for i in range(1,0, -1):
-	print(i)
+import numpy as np
+
+x = np.nan
+
+if np.isnan(x):
+	print("a")
