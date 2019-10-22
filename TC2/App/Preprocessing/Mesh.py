@@ -221,10 +221,10 @@ class Malla(DB, Geo):
 						str(element[0]))
 
 	def organizar(self):
-		def guardar(key):
+		def guardar(key, j, i):
 			self.con.execute('UPDATE elements SET ' + key + '=' + \
 				str(nodes[elements[j][3]-1][0]) + ' WHERE ElID=' + str(elements[i][0]))
-		def llenado():
+		def llenado(j, i, vec):
 			nodal_info = (nodes[elements[j][3]-1][2], nodes[elements[j][3]-1][3])
 			for key in vec:
 				if not vec[key]['value']:
@@ -232,17 +232,22 @@ class Malla(DB, Geo):
 						# ¿x?
 						if vec[key]['x'] == '+':
 							if nodal_info[0] > p[0] and p[1] == nodal_info[1]:
-								guardar(key)
+								guardar(key, j, i)
+								vec[key]['value'] = True
 						else:
 							if nodal_info[0] < p[0] and p[1] == nodal_info[1]:
-								guardar(key)
+								guardar(key, j, i)
+								vec[key]['value'] = True
 					except:
 						# y
 						if vec[key]['y'] == '+':
 							if nodal_info[1] > p[1] and p[0] == nodal_info[0]:
-								guardar(key)
-							elif nodal_info[1] < p[1] and p[0] == nodal_info[0]:
-								guardar(key)
+								guardar(key, j, i)
+								vec[key]['value'] = True
+						else:
+							if nodal_info[1] < p[1] and p[0] == nodal_info[0]:
+								guardar(key, j, i)
+								vec[key]['value'] = True
 		datos = self.con.execute("SELECT * FROM nodes ORDER BY x ASC, y ASC").fetchall()
 		new_ids = {}
 		elements = self.data('elements')
@@ -292,16 +297,16 @@ class Malla(DB, Geo):
 				if vec['N']['value'] and vec['E']['value']:
 					break
 				else:
-					llenado()
+					llenado(j, i, vec)
 			#Backward
-			for j in range(i, 0, -1):
+			for j in range(i, -1, -1):
 				if vec['S']['value'] and vec['W']['value']:
 					break
 				else:
-					llenado()	
+					llenado(j, i, vec)
 		#Organización de la información - Renombrar
 		elements = self.data('elements')
-		print(elements)
+		vec = ['N', 'S', 'p', 'E', 'W']
 		for i in range(len(datos)):
 			new_ids[i+1] = datos[i][0]
 			self.con.execute('UPDATE nodes SET ID=' + \
@@ -309,12 +314,13 @@ class Malla(DB, Geo):
 			for j in range(1, len(elements)):
 				for k in range(1, len(elements[j])):
 					if M[j-1][k-1] and elements[j-1][k] == new_ids[i+1]:
-						text = 'UPDATE elements SET Node' + str(k) + '= '
+						text = 'UPDATE elements SET ' + vec[k-1] + '= '
 						text += str(i+1) + ' WHERE ElID='
 						text += str(j)
 						self.con.execute(text)
 						M[j-1][k-1] = False
 		self.con.commit()
+		print(self.data('elements'))
 			
 
 if __name__ == '__main__':
