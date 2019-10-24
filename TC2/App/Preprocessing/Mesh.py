@@ -331,14 +331,17 @@ class Malla(DB, Geo):
 			new_ids[i+1] = datos[i][0]
 			self.con.execute('UPDATE nodes SET ID=' + \
 				str(i+1) + ' WHERE NodeID=' + str(new_ids[i+1]))
-			for j in range(1, len(elements)):
-				for k in range(1, len(elements[j])):
+			for j in range(1, len(elements)+1):
+				for k in range(1, len(elements[0])):
 					if M[j-1][k-1] and elements[j-1][k] == new_ids[i+1]:
 						text = 'UPDATE elements SET ' + vec[k-1] + '= '
 						text += str(i+1) + ' WHERE ElID='
 						text += str(j)
 						self.con.execute(text)
 						M[j-1][k-1] = False
+
+		#print(self.data('elements'))
+		#print(M)
 		self.con.commit()			
 
 if __name__ == '__main__':
@@ -368,4 +371,4 @@ if __name__ == '__main__':
 	        }
 	    }
 	}
-	Malla((0.5,0.5), (5,0), (False, False), [True, True],  data['Geometría'], local=True)
+	Malla((2,2), (5,0), (False, False), [True, True],  data['Geometría'], local=True)
