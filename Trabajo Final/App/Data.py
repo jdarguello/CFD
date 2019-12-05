@@ -29,8 +29,10 @@ def Esp():
 def Datos():
     Req = Requerimientos()
     E = Esp()
+    maximo = widgets.FloatText(value=0.08)
     tab = widgets.Tab()
-    tab.children = [Req, E]
+    tab.children = [Req, E, maximo]
     tab.set_title(0, 'Geometría')
     tab.set_title(1, 'Fluido')
+    tab.set_title(2, 'Malla')
     return tab
