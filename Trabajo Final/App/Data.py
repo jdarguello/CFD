@@ -17,8 +17,8 @@ def Esp():
     Req = widgets.Accordion(children=[widgets.FloatText(value=4.0),
                                       widgets.FloatText(value=0.001),
                                       widgets.FloatText(value=997),
-                                      widgets.FloatText(value=10.0),
-                                      widgets.FloatText(value=0.001)])
+                                      widgets.FloatText(value=0.5),
+                                      widgets.FloatText(value=0.0005)])
     Req.set_title(0, 'Constante del flujo de entrada')
     Req.set_title(1, 'Viscosidad')
     Req.set_title(2, 'Densidad [kg/m3]')
