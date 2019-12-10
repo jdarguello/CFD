@@ -212,22 +212,22 @@ class Malla(DB, Geo):
 			super(DB, self).__init__(dom)
 		#Dibujo de los elementos
 		arrows = [True, True]
-		coord = [-dom['W']['Valor']/2,0]
+		coord = [-dom['W']/2,0]
 		limit = [False,False]
-		for x in range(int(dom['W']['Valor']/El[0])):
+		for x in range(int(dom['W']/El[0])):
 			if x == 0:
 				limit[1] = "W"
-			elif x == int(dom['W']['Valor']/El[0])-1:
+			elif x == int(dom['W']/El[0])-1:
 				limit[1] = "E"
 				arrows[0] = False
 			else:
 				limit[1] = False
-			for y in range(int(dom['H']['Valor']/El[1])):
+			for y in range(int(dom['H']/El[1])):
 				#print(coord)
 				if y == 0:
 					limit[0] = "S"
 					arrows[1] = True
-				elif y == int(dom['H']['Valor']/El[1])-1:
+				elif y == int(dom['H']/El[1])-1:
 					limit[0] = "N"
 					arrows[1] = False
 				else:
@@ -385,28 +385,12 @@ class Malla(DB, Geo):
 if __name__ == '__main__':
 	data = {
 	    'Geometría': {
-	        'W': {
-	            'Valor':8,
-	            'Units': 'm'
-	        },
-	        'H': {
-	            'Valor': 10,
-	            'Units': 'm'
-	        },
-	        'r': {
-	            'Valor': 2,
-	            'Units': 'm'
-	        }
+	        'W': 8,
+	        'H': 10,
 	    },
 	    'Propiedades': {
-	        'E': {
-	            'Valor': 200E6,
-	            'Units': 'MPa'
-	        },
-	        'v': {
-	            'Valor': 0.3,
-	            'Units': ''
-	        }
-	    }
+	        'E': 200E6,
+	        'v': 0.3
+        }
 	}
 	Malla((2,2), (5,0), (False, False), [True, True],  data['Geometría'], local=True)
