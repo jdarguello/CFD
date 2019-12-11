@@ -29,7 +29,7 @@ def Requerimientos():
     return Req
 
 def Esp():
-    Req = widgets.Accordion(children=[widgets.FloatText(value=5),
+    Req = widgets.Accordion(children=[widgets.FloatText(value=0),
                                       widgets.FloatText(value=0),
                                       widgets.FloatText(value=55),
                                       widgets.FloatText(value=10),

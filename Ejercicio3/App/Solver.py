@@ -2,10 +2,11 @@ import matplotlib.pyplot as plt
 from sympy import *
 import sqlite3 as sql
 import math
-from IPython.display import display
+import numpy as np
+from IPython.display import display, Markdown
 
 class Solve():
-    def __init__(self, Tp, Tipo, Peclet, data, Dx, Dy):
+    def __init__(self, Tp, Tipo, Peclet, data, Dx, Dy, it, dom, subs):
         Tp = (Tp,)
         #---Base de datos---
         nodos = None
@@ -41,11 +42,64 @@ class Solve():
         else:
             Cons[A_pE], Cons[A_pW], Cons[A_pN], Cons[A_pS] = Max(0, 1-0.5*abs(F_E/D_E)), Max(0, 1-0.5*abs(F_W/D_W)), Max(0, 1-0.5*abs(F_N/D_N)), Max(0, 1-0.5*abs(F_S/D_S))
         Cons[rho] = rrho
-        Ec = Tp[0].subs(Cons)
-        display(Ec)
+        Ec = (Tp[0].subs(Cons),)
         
+        #Condiciones de frontera
+        nodoss = self.BC(nodos)
+        #print(nodoss)
         #Ts
+        Ts = {}
+        for i in range(it):
+            for el in elementos:
+                for Tss in [(T_N, el[1]), (T_S, el[2]), (T_E, el[4]), (T_W, el[5])]:
+                    if np.isnan(nodoss[Tss[1]-1][3]):
+                        Ts[Tss[0]] = 0
+                    else:
+                        Ts[Tss[0]] = nodoss[Tss[1]-1][3]
+                Ts[T_p0] = nodoss[el[3]-1][4]
+                #¿Lado de la derecha?
+                if nodoss[el[3]-1][1] > 0 and nodoss[el[2]-1][2] == 0:
+                    
+                    Ts[T_S] = T_p
+                #Cálculo de v y u
+                if nodoss[el[1]-1][2] < dom[1]:
+                    Ts[v] = -2*nodoss[el[1]-1][1]*(1-(nodoss[el[3]-1][2]+(nodoss[el[1]-1][2]-nodoss[el[3]-1][2])/2)**2)
+                else:
+                    Ts[v] = 0
+                if nodoss[el[4]-1][2] < dom[0]:
+                    Ts[u] = 2*nodoss[el[3]-1][2]*(1-(nodoss[el[3]-1][1] + (nodoss[el[4]-1][1]-nodoss[el[3]-1][1])/2)**2)
+                else:
+                    Ts[u] = 0
+                #print(solve(Ec[0].subs(Ts)))
+                nodoss[el[3]-1][3] = solve(Ec[0].subs(Ts))[0]
+                nodoss[el[3]-1][4] = nodoss[el[3]-1][3]
+                #¿Lado de la derecha?
+                if nodoss[el[3]-1][1] > 0 and nodoss[el[2]-1][2] == 0:
+                    nodoss[el[2]-1][3] = nodoss[el[3]-1][3]
         
+        #---Esquema---
+        T = np.zeros((subs[0]+2, subs[1]+2))
+        suma = [-dom[0]/2,dom[1]]
+        for i in range(1,subs[1]+2):
+            suma[0] += 1
+            for j in range(1,subs[0]+1):
+                suma[1] += 1
+                T[i][j] = suma[1]
+        print(T)
+        display(Markdown("__Resultados:__"))
+        plt.figure(figsize=(12,8))
+        plt.matshow(T, cmap=plt.cm.get_cmap('jet'), fignum=1)
+        
+    def BC(self, nodos):
+        nodoss = np.zeros((len(nodos), 5))
+        for i in range(len(nodos)):
+            for j in range(5):
+                nodoss[i][j] = nodos[i][j+1]
+            if nodoss[i][2] == 0 and nodoss[i][1] < 0:
+                nodoss[i][3] = 1+math.tanh(10)*(2+nodoss[i][1]+1)
+            if nodoss[i][2] == 0 and nodoss[i][1] > 0:
+                nodoss[i][3] = np.nan
+        return nodoss
         
         
         

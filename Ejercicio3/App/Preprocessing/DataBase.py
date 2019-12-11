@@ -33,7 +33,8 @@ class DB():
 				ID INTEGER,
 				x float,
 				y float,
-				T float
+				T float,
+				Tp float DEFAULT 0
 			)
 			""")
 		self.con.commit()
