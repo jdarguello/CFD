@@ -4,6 +4,7 @@ import sqlite3 as sql
 import math
 import numpy as np
 from IPython.display import display, Markdown
+from ipywidgets import *
 
 class Solve():
     def __init__(self, Tp, Tipo, Peclet, data, Dx, Dy, it, dom, subs):
@@ -47,11 +48,24 @@ class Solve():
         #Condiciones de frontera
         nodoss = self.BC(nodos)
         #print(nodoss)
+        
         #Ts
+        display(Markdown("_Progreso..._"))
+        maximo = 0
+        for i in range(it):
+            for el in elementos:
+                for Tss in [(T_N, el[1]), (T_S, el[2]), (T_E, el[4]), (T_W, el[5])]:
+                    maximo += 1
+        for j in range(1,subs[1]+1):
+            for i in range(1,subs[0]+2):
+                maximo += 1
+        f = FloatProgress(min=0, max=maximo)
+        display(f)
         Ts = {}
         for i in range(it):
             for el in elementos:
                 for Tss in [(T_N, el[1]), (T_S, el[2]), (T_E, el[4]), (T_W, el[5])]:
+                    f.value += 1
                     if np.isnan(nodoss[Tss[1]-1][3]):
                         Ts[Tss[0]] = 0
                     else:
@@ -78,17 +92,29 @@ class Solve():
                     nodoss[el[2]-1][3] = nodoss[el[3]-1][3]
         
         #---Esquema---
+        #print(nodoss)
+        id = 0
         T = np.zeros((subs[0]+2, subs[1]+2))
-        suma = [-dom[0]/2,dom[1]]
-        for i in range(1,subs[1]+2):
-            suma[0] += 1
-            for j in range(1,subs[0]+1):
-                suma[1] += 1
-                T[i][j] = suma[1]
-        print(T)
+        #f.value = 0
+        for j in range(1,subs[1]+1):
+            for i in range(1,subs[0]+2):
+                f.value += 1
+                if self.Condicion(id, nodoss,dom):
+                    id += subs[0]+2
+                else:
+                    id += 1
+                if nodoss[id-1][2] == dom[1]:
+                    id += 1
+                #print(id)
+                T[i][j] = nodoss[id-1][3]
+        #print(T)
         display(Markdown("__Resultados:__"))
         plt.figure(figsize=(12,8))
-        plt.matshow(T, cmap=plt.cm.get_cmap('jet'), fignum=1)
+        plt.imshow(T, cmap=plt.cm.get_cmap('jet'), interpolation='spline16')
+        plt.colorbar()
+    
+    def Condicion(self, id, nodoss,dom):
+        return nodoss[id-1][1] == 0 or nodoss[id-1][1] == dom[0]/2
         
     def BC(self, nodos):
         nodoss = np.zeros((len(nodos), 5))

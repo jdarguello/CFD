@@ -306,7 +306,7 @@ class Malla(DB, Geo):
 							if nodal_info[1] < p[1] and p[0] == nodal_info[0]:
 								guardar(key, j, i)
 								vec[key]['value'] = True
-		datos = self.con.execute("SELECT * FROM nodes ORDER BY x ASC, y ASC").fetchall()
+		datos = self.con.execute("SELECT * FROM nodes ORDER BY x ASC, y DESC").fetchall()
 		new_ids = {}
 		elements = self.data('elements')
 		nodes = self.con.execute("SELECT * FROM nodes").fetchall()
